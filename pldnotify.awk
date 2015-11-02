@@ -643,13 +643,6 @@ function zf_upgrade(name, ver) {
 	);
 }
 
-function hudson_upgrade(name, ver) {
-	return rss_upgrade(name, ver, \
-		"https://hudson.dev.java.net/servlets/ProjectRSS?type=news", \
-		"Hudson ([0-9.]+) released" \
-	);
-}
-
 # upgrade check for pear package using PEAR CLI
 function pear_upgrade(name, ver,    cmd) {
 	sub(/^php-pear-/, "", name);
@@ -747,8 +740,6 @@ function process_data(name, ver, rel,     src, nver, i) {
 		nver = pear_upgrade(name, ver);
 	} else if (name == "ZendFramework") {
 		nver = zf_upgrade(name, ver);
-	} else if (name == "hudson") {
-		nver = hudson_upgrade(name, ver);
 	} else if (name == "vim") {
 		nver = vim_upgrade(name, ver);
 	} else if (name == "google-chrome") {
