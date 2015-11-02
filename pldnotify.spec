@@ -5,9 +5,17 @@ Release:	1
 License:	GPL
 Group:		Applications/File
 Source0:	%{name}.awk
+Requires:	coreutils
 Requires:	curl
+Requires:	nodejs
+Requires:	npm
+Requires:	perl-HTML-Tree
 Requires:	perl-base
+Requires:	php-pear-PEAR
 Requires:	rpmbuild(macros) >= 1.539
+Requires:	ruby-rubygems
+Requires:	sed
+Requires:	util-linux
 Requires:	wget
 Conflicts:	rpm-build-tools < 4.8
 BuildArch:	noarch
