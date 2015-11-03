@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import requests
 import rpm
 import sys
 
@@ -36,12 +37,28 @@ class RPMSpec:
 
         return self._macros
 
+"""
+Check for update from release-monitoring.org.
+Raise ValueError or version from anitya project.
+"""
+def rmo_check(name):
+    distro = "pld-linux"
+    url = "https://release-monitoring.org/api/project/%s/%s" % (distro, name)
+    response = requests.get(url)
+    data = response.json()
+    if 'error' in data:
+        raise ValueError, data['error']
+
+    return data['version']
+
 def check_package(package):
     s = RPMSpec(package)
     macros = s.macros()
     name = macros['name']
     version = macros['version']
     print "%s: %s" % (name, version)
+    ver = rmo_check(name)
+    print "Anitya: %s" % ver
 
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases.')
