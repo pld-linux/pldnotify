@@ -732,6 +732,9 @@ function rmo_check(name,    sourceurl, cmd, ver) {
 	cmd | getline ver
 	close(cmd)
 
+	# strip vX.Y -> X.y
+	sub("^v", "", ver)
+
 	return ver
 }
 
