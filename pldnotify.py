@@ -21,6 +21,13 @@ class RPMSpec:
 
         return self._spec
 
+    # compare version against current package
+    # using rpm.labelCompare function
+    def compare(self, version):
+        v1 = (None, version, '1')
+        v2 = (None, self.macros()['version'], '1')
+        return rpm.labelCompare(v1, v2)
+
     def macros(self):
         if not self._macros:
             s = self.getSpec()
@@ -59,6 +66,16 @@ def check_package(package):
     print "%s: %s" % (name, version)
     ver = rmo_check(name)
     print "Anitya: %s" % ver
+
+    cmp = s.compare(ver)
+    if cmp > 0:
+        print "NEWER"
+    elif cmp == 0:
+        print "same :("
+    elif cmp < 0:
+        print "OLDER!"
+    else:
+        raise ValueError, "Invalid value: %r" % cmp
 
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases.')
