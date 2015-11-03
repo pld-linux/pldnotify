@@ -45,18 +45,28 @@ class RPMSpec:
         return self._macros
 
 """
-Check for update from release-monitoring.org.
-Raise ValueError or version from anitya project.
-"""
-def rmo_check(name):
-    distro = "pld-linux"
-    url = "https://release-monitoring.org/api/project/%s/%s" % (distro, name)
-    response = requests.get(url)
-    data = response.json()
-    if 'error' in data:
-        raise ValueError, data['error']
+Class containing specific remote repositories,
+i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
 
-    return data['version']
+"""
+class Checker:
+    distro = 'pld-linux'
+
+    def __init__(self, name):
+        self.name = name
+
+    """
+        Check for update from release-monitoring.org (Anitya).
+        Raise ValueError or version from anitya project.
+    """
+    def anitya(self):
+        url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, self.name)
+        response = requests.get(url)
+        data = response.json()
+        if 'error' in data:
+            raise ValueError, data['error']
+
+        return data['version']
 
 def check_package(package):
     s = RPMSpec(package)
@@ -64,7 +74,8 @@ def check_package(package):
     name = macros['name']
     version = macros['version']
     print "%s: %s" % (name, version)
-    ver = rmo_check(name)
+    check = Checker(name)
+    ver = check.anitya()
     print "Anitya: %s" % ver
 
     cmp = s.compare(ver)
