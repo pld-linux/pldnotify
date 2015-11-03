@@ -1,15 +1,47 @@
 #!/usr/bin/python
 
 import argparse
-import collections
-import os
 import rpm
-import shlex
-import subprocess
 import sys
 
+"""
+RPM Spec parser
+"""
+class RPMSpec:
+    def __init__(self, specfile):
+        self._specfile = specfile
+        self._spec = None
+        self._macros = None
+
+    def getSpec(self):
+        if not self._spec:
+            ts = rpm.TransactionSet()
+            self._spec = ts.parseSpec(self._specfile)
+
+        return self._spec
+
+    def macros(self):
+        if not self._macros:
+            s = self.getSpec()
+            macros = {}
+            for key, macro in s.macros().items():
+                # skip functions
+                if 'opts' in macro:
+                    continue
+                # skip unused macros
+                if macro['used'] <= 0:
+                    continue
+                macros[key] = macro['body']
+            self._macros = macros
+
+        return self._macros
+
 def check_package(package):
-    print package
+    s = RPMSpec(package)
+    macros = s.macros()
+    name = macros['name']
+    version = macros['version']
+    print "%s: %s" % (name, version)
 
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases.')
@@ -19,7 +51,7 @@ def main():
     parser.add_argument('package',
         type=str,
         help='Package to check')
-        
+
     args = parser.parse_args()
     check_package(args.package)
 
