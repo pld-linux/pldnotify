@@ -12,6 +12,7 @@ Requires:	npm
 Requires:	perl-HTML-Tree
 Requires:	perl-base
 Requires:	php-pear-PEAR
+Requires:	python-rpm >= 5.4.15-26
 Requires:	rpmbuild(macros) >= 1.539
 Requires:	ruby-rubygems
 Requires:	sed
