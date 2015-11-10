@@ -727,7 +727,7 @@ function jenkins_upgrade(name, ver, urls,  url, i, c, chunks, nver) {
 # check for update from release-monitoring.org
 function rmo_check(name,    sourceurl, cmd, ver) {
 	sourceurl = "https://release-monitoring.org/api/project/pld-linux/" name
-	cmd = "echo 'var data='\"$(curl -m 45 -s " sourceurl ")\"';if (data.version) process.stdout.write(data.version)' | node"
+	cmd = "echo 'var data='\"$(curl -m 45 -sSf " sourceurl " || echo '{}')\"';if (data.version) process.stdout.write(data.version)' | node"
 	d("rmo: " cmd);
 	cmd | getline ver
 	close(cmd)
