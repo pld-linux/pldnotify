@@ -51,9 +51,43 @@ i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
 """
 class Checker:
     distro = 'pld-linux'
+    checkers = ['anitya']
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, specfile):
+        self.spec = RPMSpec(specfile)
+
+        try:
+            macros = self.spec.macros()
+        except rpm.error, e:
+            raise ValueError, e
+
+        self.name = macros['name']
+        self.version = macros['version']
+
+        if self.name != specfile[0:-5]:
+            print "WARNING: name mismatch: %s!=%s" % (self.name, name)
+
+        print "%s: %s" % (self.name, self.version)
+
+    def find_recent(self):
+        current = None
+
+        for fn in self.checkers:
+            try:
+                v = getattr(self, fn)()
+            except ValueError, e:
+                print "WARNING: skipping %s: %s" % (fn, e)
+                continue
+
+            print "DEBUG: %s: %s" % (fn, v)
+
+            if self.spec.compare(v) <= 0:
+                print "DEBUG: skipping %s (is not newer)" % (v)
+                continue
+
+            current = v
+
+        return current
 
     """
         Check for update from release-monitoring.org (Anitya).
@@ -68,26 +102,6 @@ class Checker:
 
         return data['version']
 
-def check_package(package):
-    s = RPMSpec(package)
-    macros = s.macros()
-    name = macros['name']
-    version = macros['version']
-    print "%s: %s" % (name, version)
-    check = Checker(name)
-    ver = check.anitya()
-    print "Anitya: %s" % ver
-
-    cmp = s.compare(ver)
-    if cmp > 0:
-        print "NEWER"
-    elif cmp == 0:
-        print "same :("
-    elif cmp < 0:
-        print "OLDER!"
-    else:
-        raise ValueError, "Invalid value: %r" % cmp
-
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases.')
     parser.add_argument('-d', '--debug',
@@ -98,7 +112,13 @@ def main():
         help='Package to check')
 
     args = parser.parse_args()
-    check_package(args.package)
+
+    checker = Checker(args.package)
+    ver = checker.find_recent()
+    if ver:
+        print "Found an update: %s" % ver
+    else:
+        print "No update for %s" % args.package
 
 if __name__ == '__main__':
     main()
