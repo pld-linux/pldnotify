@@ -4,6 +4,7 @@ import argparse
 import requests
 import rpm
 import sys
+from os import path
 
 """
 RPM Spec parser
@@ -64,7 +65,8 @@ class Checker:
         self.name = macros['name']
         self.version = macros['version']
 
-        if self.name != specfile[0:-5]:
+        name = path.splitext(path.basename(specfile))[0]
+        if self.name != name:
             print "WARNING: name mismatch: %s!=%s" % (self.name, name)
 
         print "%s: %s" % (self.name, self.version)
