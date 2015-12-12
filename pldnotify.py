@@ -60,7 +60,7 @@ class Checker:
         try:
             macros = self.spec.macros()
         except rpm.error, e:
-            raise ValueError, e
+            raise ValueError, "%s: %s" % (specfile, e.message)
 
         self.name = macros['name']
         self.version = macros['version']
@@ -105,22 +105,35 @@ class Checker:
         return data['version']
 
 def main():
-    parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases.')
+    parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases')
+
     parser.add_argument('-d', '--debug',
         action='store_true',
         help='Enable debugging (default: %(default)s)')
-    parser.add_argument('package',
-        type=str,
+
+    parser.add_argument('packages',
+        type=str, nargs='*',
         help='Package to check')
 
     args = parser.parse_args()
 
-    checker = Checker(args.package)
-    ver = checker.find_recent()
-    if ver:
-        print "Found an update: %s" % ver
-    else:
-        print "No update for %s" % args.package
+    i = 0
+    n = len(args.packages)
+    print "Checking %d packages" % n
+    for package in args.packages:
+        i += 1
+        print "[%d/%d] checking %s" % (i, n, package)
+        try:
+            checker = Checker(package)
+            ver = checker.find_recent()
+        except Exception, e:
+            print "ERROR: %s" % e
+            continue
+
+        if ver:
+            print "[%s] Found an update: %s" % (package, ver)
+        else:
+            print "[%s] No updates found" % (package)
 
 if __name__ == '__main__':
     main()
