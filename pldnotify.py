@@ -62,8 +62,11 @@ class Checker:
         except rpm.error, e:
             raise ValueError, "%s: %s" % (specfile, e.message)
 
-        self.name = macros['name']
-        self.version = macros['version']
+        try:
+            self.name = macros['name']
+            self.version = macros['version']
+        except Exception, e:
+            raise ValueError, "%s: macro error: %s" % (specfile, e.message)
 
         name = path.splitext(path.basename(specfile))[0]
         if self.name != name:
