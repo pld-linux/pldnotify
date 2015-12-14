@@ -37,8 +37,8 @@ class RPMSpec:
                 # skip functions
                 if 'opts' in macro:
                     continue
-                # skip unused macros
-                if macro['used'] <= 0:
+                # skip unused macros, except name and version
+                if macro['used'] <= 0 and (key not in ['name', 'version']):
                     continue
                 macros[key] = macro['body']
             self._macros = macros
