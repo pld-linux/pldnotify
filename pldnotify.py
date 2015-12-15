@@ -103,9 +103,33 @@ class Checker:
         response = requests.get(url)
         data = response.json()
         if 'error' in data:
-            raise ValueError, data['error']
+            error = data['error']
+            if error == 'No package "%s" found in distro "%s"' % (self.name, self.distro):
+                res = self.anitya_alternatives()
+                if res != None:
+                    error = error + ", " + res
+            raise ValueError, error
 
         return data['version']
+
+    """
+        Return alternatives found from Anitya
+    """
+    def anitya_alternatives(self):
+        url = "https://release-monitoring.org/api/projects/?pattern=%s" % self.name
+        data = requests.get(url).json()
+
+        if data['total'] == 0:
+            return None
+
+        def format_project(project):
+            return '"%s" (%s)' % (project['name'], project['homepage'])
+
+        r = []
+        for project in data['projects']:
+            r.append(format_project(project))
+
+        return "Do you need to map %s?" % (", ".join(r))
 
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases')
