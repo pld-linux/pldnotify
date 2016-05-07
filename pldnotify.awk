@@ -279,6 +279,10 @@ function get_links(url,filename,   errno,link,oneline,retval,odp,wholeodp,lowero
 		gsub("\/archive\/.*", "/tags", url)
 		d("github archive url, mangled url to: " url)
 
+	} else if (url ~ /^(http|https):\/\/github.com\/.*\/(.*)\/releases\/download\//) {
+		gsub("\/download\/.*", "/", url)
+		d("github download url, mangled url to: " url)
+
 	} else if (url ~ /^(http|https):\/\/bitbucket.org\/.*\/get\/.*/) {
 		# https://bitbucket.org/logilab/pylint/get/tip.tar.bz2 -> https://bitbucket.org/logilab/pylint/downloads
 		gsub("\/get\/.*", "/downloads", url)
