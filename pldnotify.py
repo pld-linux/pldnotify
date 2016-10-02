@@ -107,7 +107,7 @@ class Checker:
             if error == 'No package "%s" found in distro "%s"' % (self.name, self.distro):
                 res = self.anitya_alternatives()
                 if res != None:
-                    error = error + ", " + res
+                    error = error + "\n" + res
             raise ValueError, error
 
         return data['version']
@@ -123,13 +123,15 @@ class Checker:
             return None
 
         def format_project(project):
-            return '"%s" (%s)' % (project['name'], project['homepage'])
+            url = 'https://release-monitoring.org/project/%d/' % project['id']
+
+            return '"%s" (%s): %s' % (project['name'], project['homepage'], url)
 
         r = []
         for project in data['projects']:
             r.append(format_project(project))
 
-        return "Do you need to map %s?" % (", ".join(r))
+        return "Possible matches:\n- %s" % ("\n- ".join(r))
 
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases')
