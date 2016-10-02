@@ -1,10 +1,11 @@
 Summary:	Tool to check for updates in RPM .spec files
 Name:		pldnotify
 Version:	4.8
-Release:	1
+Release:	2
 License:	GPL
 Group:		Applications/File
 Source0:	%{name}.awk
+Source1:	%{name}.py
 Requires:	coreutils
 Requires:	curl
 Requires:	nodejs
@@ -28,17 +29,21 @@ Tool to check for updates in RPM .spec files.
 
 %prep
 %setup -qcT
-cp -p %{SOURCE0} pldnotify.awk
+cp -p %{SOURCE0} .
+cp -p %{SOURCE1} .
 
 %install
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_bindir}
-install -p pldnotify.awk $RPM_BUILD_ROOT%{_bindir}/pldnotify
-ln -s pldnotify $RPM_BUILD_ROOT%{_bindir}/pldnotify.awk
+install -p pldnotify.awk $RPM_BUILD_ROOT%{_bindir}
+install -p pldnotify.py $RPM_BUILD_ROOT%{_bindir}
+ln -s pldnotify.awk $RPM_BUILD_ROOT%{_bindir}/pldnotify
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_bindir}/pldnotify*
+%attr(755,root,root) %{_bindir}/pldnotify.awk
+%attr(755,root,root) %{_bindir}/pldnotify.py
+%attr(755,root,root) %{_bindir}/pldnotify
