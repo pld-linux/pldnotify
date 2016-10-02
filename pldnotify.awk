@@ -1,6 +1,6 @@
 #!/bin/awk -f
 #
-# Copyright (C) 2000-2015 PLD-Team <feedback@pld-linux.org>
+# Copyright (C) 2000-2016 PLD-Team <feedback@pld-linux.org>
 # Authors:
 #	Sebastian Zagrodzki <zagrodzki@pld-linux.org>
 #	Jacek Konieczny <jajcus@pld-linux.org>
@@ -8,7 +8,7 @@
 #	Jakub Bogusz <qboosh@pld-linux.org>
 #	Elan Ruusamäe <glen@pld-linux.org>
 #
-# See cvs log pldnotify.awk for list of contributors
+# See git log pldnotify.awk for list of contributors
 #
 # TODO:
 # - "SourceXDownload" support (use given URLs if present instead of cut-down SourceX URLs)
