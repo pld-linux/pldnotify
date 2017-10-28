@@ -766,10 +766,8 @@ function process_data(name, ver, rel,     src, nver, i) {
 	if (nver) {
 		if (compare_ver(ver, nver)) {
 			print name " [OLD] " ver " [NEW] " nver
-		} else {
-			print name " seems ok: " ver
+			return
 		}
-		return;
 	}
 
 	if (name == "xulrunner") {
