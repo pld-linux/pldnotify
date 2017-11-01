@@ -323,7 +323,12 @@ function get_links(url,filename,   errno,link,oneline,retval,odp,wholeodp,lowero
 		d("rar tarball url, mangled url to: " url)
 	} else if (url ~/^(http|https):\/\/pypi.python.org\/packages\/source\/.*/) {
 		gsub("/packages/source/[a-zA-Z0-9]/", "/pypi/", url)
-		d("pypi.python.org url, mangled url to: " url)
+		d("pypi.python.org 1 url, mangled url to: " url)
+	} else if (url ~/^(http|https):\/\/pypi.python.org\/packages\/.*/) {
+		project = filename
+		gsub("-[0-9]+.*", "", project)
+		gsub("/packages/.*/", "/pypi/" project, url)
+		d("pypi.python.org 2 url, mangled url to: " url)
 	}
 
 	d("Retrieving: " url)
