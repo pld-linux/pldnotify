@@ -329,6 +329,12 @@ function get_links(url,filename,   errno,link,oneline,retval,odp,wholeodp,lowero
 		gsub("-[0-9]+.*", "", project)
 		gsub("/packages/.*/", "/pypi/" project, url)
 		d("pypi.python.org 2 url, mangled url to: " url)
+	} else if (url ~/^(http|https):\/\/files\.pythonhosted\.org\/packages\/.*/) {
+		project = filename
+		gsub("-[0-9]+.*", "", project)
+		gsub("/packages/.*/", "/pypi/" project, url)
+		gsub("files\.pythonhosted\.org", "pypi.python.org", url)
+		d("files.pythonhosted.org url, mangled url to: " url)
 	}
 
 	d("Retrieving: " url)
