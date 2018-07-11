@@ -335,6 +335,9 @@ function get_links(url,filename,   errno,link,oneline,retval,odp,wholeodp,lowero
 		gsub("/packages/.*/", "/pypi/" project, url)
 		gsub("files\.pythonhosted\.org", "pypi.python.org", url)
 		d("files.pythonhosted.org url, mangled url to: " url)
+	} else if (url ~/^ftp:\/\/ftp.debian.org\//) {
+		gsub("ftp://ftp.debian.org/", "http://ftp.debian.org/", url)
+		d("ftp://ftp.debian.org url, mangled url to: " url)
 	}
 
 	d("Retrieving: " url)
