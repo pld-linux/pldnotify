@@ -756,7 +756,50 @@ function rmo_check(name,    sourceurl, cmd, ver) {
 	return ver
 }
 
-function process_data(name, ver, rel,     src, nver, i) {
+# check github rss
+function githubrss(name, sourceurl) {
+	# https://github.com/giampaolo/psutil/archive/release-5.3.7/psutil-5.3.7.tar.gz
+	gsub(".*github.com\/", "", sourceurl)
+	gsub("\/archive\/.*", "", sourceurl)
+	gsub("\/releases\/.*", "", sourceurl)
+	repo = sourceurl
+	relurl = "https://github.com/" repo "/releases.atom"
+	cmd = "curl -m 45 -sSf " relurl " | grep '<title>' | sed -e 's#.*<title>##g' -e 's#</title>##g' | head -n 2 | tail -n 1"
+	d("githubrss rel: " cmd);
+	cmd | getline ghrel
+	close(cmd)
+	d("githubrss tag: " ghrel)
+
+	# strip whatever until -
+	sub("^.*-", "", ghrel)
+	sub(" .*", "", ghrel)
+	sub(":.*", "", ghrel)
+	if (ghrel) {
+		return ghrel
+	}
+
+	tagsurl = "https://api.github.com/" repo "/tags.atom"
+	cmd = "curl -m 45 -sSf " tagsurl " | grep '<title>' | sed -e 's#.*<title>##g' -e 's#</title>##g' | head -n 2 | tail -n 1"
+	d("githubrss tag: " cmd);
+	cmd | getline ghtag
+	close(cmd)
+	d("githubrss tag: " ghtag)
+
+	sub("^.*-", "", ghtag)
+	sub(" .*", "", ghtag)
+	sub(":.*", "", ghtag)
+	if (ghtag) {
+		return ghtag
+	}
+}
+
+
+function array_first(arr) {
+	for (i in arr)
+		return arr[i]
+}
+
+function process_data(name, ver, rel, src, nver, i) {
 	if (name ~ /^php-pear-/) {
 		nver = pear_upgrade(name, ver);
 	} else if (name == "ZendFramework") {
@@ -773,6 +816,8 @@ function process_data(name, ver, rel,     src, nver, i) {
 		nver = rubygem_upgrade(name, ver);
 	} else if (name ~ "jenkins") {
 		nver = jenkins_upgrade(name, ver, src);
+	} else if (name && array_first(src) ~ /github.com/) {
+		nver = githubrss(name, array_first(src));
 	} else if (name) {
 		nver = rmo_check(name);
 	}
