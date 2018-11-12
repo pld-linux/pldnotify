@@ -747,10 +747,13 @@ function rmo_check(name,    sourceurl, cmd, ver) {
 	sourceurl = "https://release-monitoring.org/api/project/pld-linux/" name
 	cmd = "curl -m 45 -sf " sourceurl
 	d("rmo: " cmd);
-	cmd | getline data
+	dataall = ""
+	while (cmd | getline data) {
+		dataall = dataall "\n" data
+	}
 	close(cmd)
-	if (data) {
-		cmd = "echo 'var data='\"" data "\"';if (data.version) process.stdout.write(data.version)' | node"
+	if (dataall) {
+		cmd = "echo 'var data='\"" dataall "\"';if (data.version) process.stdout.write(data.version)' | node"
 		d("rmo: " cmd);
 		cmd | getline ver
 		close(cmd)
