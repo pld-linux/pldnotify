@@ -1,6 +1,6 @@
 #!/bin/awk -f
 #
-# Copyright (C) 2000-2016 PLD-Team <feedback@pld-linux.org>
+# Copyright (C) 2000-2021 PLD-Team <feedback@pld-linux.org>
 # Authors:
 #	Sebastian Zagrodzki <zagrodzki@pld-linux.org>
 #	Jacek Konieczny <jajcus@pld-linux.org>
