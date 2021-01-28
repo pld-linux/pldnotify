@@ -17,7 +17,7 @@
 
 # NOTE:
 # to test run this, run:
-# $ awk -vDEBUG=1 pldnotify.awk < specfile
+# $ awk -vDEBUG=1 -f pldnotify.awk < specfile
 #
 # To get full out of it, you need to have following tools installed:
 # - perl, sed, wget, coreutils, util-linux
