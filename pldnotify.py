@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import requests
@@ -12,38 +12,45 @@ RPM Spec parser
 class RPMSpec:
     def __init__(self, specfile):
         self._specfile = specfile
-        self._spec = None
-        self._macros = None
+        self._header = None
+        self._name = None
+        self._version = None
 
-    def getSpec(self):
-        if not self._spec:
-            ts = rpm.TransactionSet()
-            self._spec = ts.parseSpec(self._specfile)
-
-        return self._spec
+    def getSpecHeader(self):
+        if not self._header:
+            spec = rpm.spec(self._specfile)
+            self._header = spec.sourceHeader
+        return self._header
 
     # compare version against current package
     # using rpm.labelCompare function
     def compare(self, version):
         v1 = (None, version, '1')
-        v2 = (None, self.macros()['version'], '1')
-        return rpm.labelCompare(v1, v2)
+        v2 = (None, self.version, '1')
+        try:
+            return rpm.labelCompare(v1, v2)
+        except ValueError:
+            return -1
 
-    def macros(self):
-        if not self._macros:
-            s = self.getSpec()
-            macros = {}
-            for key, macro in s.macros().items():
-                # skip functions
-                if 'opts' in macro:
-                    continue
-                # skip unused macros, except name and version
-                if macro['used'] <= 0 and (key not in ['name', 'version']):
-                    continue
-                macros[key] = macro['body']
-            self._macros = macros
+    @property
+    def name(self):
+        if not self._name:
+            if not self._header:
+                self.getSpecHeader()
+            self._name = self._header[rpm.RPMTAG_NAME]
+            if not self._name:
+                raise ValueError("%s: spec with no name" % self._specfile)
+        return self._name
 
-        return self._macros
+    @property
+    def version(self):
+        if not self._version:
+            if not self._header:
+                self.getSpecHeader()
+            self._version = self._header[rpm.RPMTAG_VERSION]
+            if not self._version:
+                raise ValueError("%s: spec with no version" % self._specfile)
+        return self._version
 
 """
 Class containing specific remote repositories,
@@ -54,25 +61,15 @@ class Checker:
     distro = 'pld-linux'
     checkers = ['anitya']
 
-    def __init__(self, specfile):
+    def __init__(self, specfile, debug):
+        self.debug = debug
         self.spec = RPMSpec(specfile)
 
-        try:
-            macros = self.spec.macros()
-        except rpm.error, e:
-            raise ValueError, "%s: %s" % (specfile, e.message)
-
-        try:
-            self.name = macros['name']
-            self.version = macros['version']
-        except Exception, e:
-            raise ValueError, "%s: macro error: %s" % (specfile, e.message)
-
         name = path.splitext(path.basename(specfile))[0]
-        if self.name != name:
-            print "WARNING: name mismatch: %s!=%s" % (self.name, name)
+        if self.spec.name != name:
+            print("WARNING: name mismatch: %s!=%s" % (self.spec.name, name))
 
-        print "%s: %s" % (self.name, self.version)
+        print("%s: %s" % (self.spec.name, self.spec.version))
 
     def find_recent(self):
         current = None
@@ -80,14 +77,16 @@ class Checker:
         for fn in self.checkers:
             try:
                 v = getattr(self, fn)()
-            except ValueError, e:
-                print "WARNING: skipping %s: %s" % (fn, e)
+            except ValueError as e:
+                print("WARNING: skipping %s: %s" % (fn, e))
                 continue
 
-            print "DEBUG: %s: %s" % (fn, v)
+            if self.debug:
+                print("DEBUG: %s: %s" % (fn, v))
 
             if self.spec.compare(v) <= 0:
-                print "DEBUG: skipping %s (is not newer)" % (v)
+                if self.debug:
+                    print("DEBUG: skipping %s (is not newer)" % (v))
                 continue
 
             current = v
@@ -99,16 +98,16 @@ class Checker:
         Raise ValueError or version from anitya project.
     """
     def anitya(self):
-        url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, self.name)
+        url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, self.spec.name)
         response = requests.get(url)
         data = response.json()
         if 'error' in data:
             error = data['error']
-            if error == 'No package "%s" found in distro "%s"' % (self.name, self.distro):
+            if error == 'No package "%s" found in distro "%s"' % (self.spec.name, self.distro):
                 res = self.anitya_alternatives()
                 if res != None:
                     error = error + "\n" + res
-            raise ValueError, error
+            raise ValueError(error)
 
         return data['version']
 
@@ -116,7 +115,7 @@ class Checker:
         Return alternatives found from Anitya
     """
     def anitya_alternatives(self):
-        url = "https://release-monitoring.org/api/projects/?pattern=%s" % self.name
+        url = "https://release-monitoring.org/api/projects/?pattern=%s" % self.spec.name
         data = requests.get(url).json()
 
         if data['total'] == 0:
@@ -146,23 +145,26 @@ def main():
 
     args = parser.parse_args()
 
+    if not args.debug:
+        rpm.setVerbosity(rpm.RPMLOG_ERR)
+
     i = 0
     n = len(args.packages)
-    print "Checking %d packages" % n
+    print("Checking %d packages" % n)
     for package in args.packages:
         i += 1
-        print "[%d/%d] checking %s" % (i, n, package)
+        print("[%d/%d] checking %s" % (i, n, package))
         try:
-            checker = Checker(package)
+            checker = Checker(package, args.debug)
             ver = checker.find_recent()
-        except Exception, e:
-            print "ERROR: %s" % e
+        except Exception as e:
+            print("ERROR: %s" % e)
             continue
 
         if ver:
-            print "[%s] Found an update: %s" % (package, ver)
+            print("[%s] Found an update: %s" % (package, ver))
         else:
-            print "[%s] No updates found" % (package)
+            print("[%s] No updates found" % (package))
 
 if __name__ == '__main__':
     main()

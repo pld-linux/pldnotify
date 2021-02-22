@@ -1,7 +1,7 @@
 Summary:	Tool to check for updates in RPM .spec files
 Name:		pldnotify
-Version:	4.8
-Release:	2
+Version:	4.9
+Release:	1
 License:	GPL
 Group:		Applications/File
 Source0:	%{name}.awk
@@ -13,8 +13,8 @@ Requires:	npm
 Requires:	perl-HTML-Tree
 Requires:	perl-base
 Requires:	php-pear-PEAR
-Requires:	python-requests
-Requires:	python-rpm >= 5.4.15-26
+Requires:	python3-requests
+Requires:	python3-rpm
 Requires:	rpmbuild(macros) >= 1.539
 Requires:	ruby-rubygems
 Requires:	sed
