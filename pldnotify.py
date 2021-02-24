@@ -17,7 +17,7 @@ class RPMSpec:
         self._name = None
         self._version = None
 
-    def getSpecHeader(self):
+    def get_spec_header(self):
         if not self._header:
             spec = rpm.spec(self._specfile)
             self._header = spec.sourceHeader
@@ -37,7 +37,7 @@ class RPMSpec:
     def name(self):
         if not self._name:
             if not self._header:
-                self.getSpecHeader()
+                self.get_spec_header()
             self._name = self._header[rpm.RPMTAG_NAME]
             if not self._name:
                 raise ValueError("%s: spec with no name" % self._specfile)
@@ -47,7 +47,7 @@ class RPMSpec:
     def version(self):
         if not self._version:
             if not self._header:
-                self.getSpecHeader()
+                self.get_spec_header()
             self._version = self._header[rpm.RPMTAG_VERSION]
             if not self._version:
                 raise ValueError("%s: spec with no version" % self._specfile)
