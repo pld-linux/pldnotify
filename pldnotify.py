@@ -8,6 +8,8 @@ from os import path
 """
 RPM Spec parser
 """
+
+
 class RPMSpec:
     def __init__(self, specfile):
         self._specfile = specfile
@@ -51,11 +53,14 @@ class RPMSpec:
                 raise ValueError("%s: spec with no version" % self._specfile)
         return self._version
 
+
 """
 Class containing specific remote repositories,
 i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
 
 """
+
+
 class Checker:
     distro = 'pld-linux'
     checkers = ['anitya']
@@ -96,6 +101,7 @@ class Checker:
         Check for update from release-monitoring.org (Anitya).
         Raise ValueError or version from anitya project.
     """
+
     def anitya(self):
         url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, self.spec.name)
         response = requests.get(url)
@@ -113,6 +119,7 @@ class Checker:
     """
         Return alternatives found from Anitya
     """
+
     def anitya_alternatives(self):
         url = "https://release-monitoring.org/api/projects/?pattern=%s" % self.spec.name
         data = requests.get(url).json()
@@ -131,16 +138,17 @@ class Checker:
 
         return "Possible matches:\n- %s" % ("\n- ".join(r))
 
+
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases')
 
     parser.add_argument('-d', '--debug',
-        action='store_true',
-        help='Enable debugging (default: %(default)s)')
+                        action='store_true',
+                        help='Enable debugging (default: %(default)s)')
 
     parser.add_argument('packages',
-        type=str, nargs='*',
-        help='Package to check')
+                        type=str, nargs='*',
+                        help='Package to check')
 
     args = parser.parse_args()
 
@@ -164,6 +172,7 @@ def main():
             print("[%s] Found an update: %s" % (package, ver))
         else:
             print("[%s] No updates found" % (package))
+
 
 if __name__ == '__main__':
     main()
