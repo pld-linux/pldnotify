@@ -3,7 +3,6 @@
 import argparse
 import requests
 import rpm
-import sys
 from os import path
 
 """
