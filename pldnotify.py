@@ -63,7 +63,8 @@ class RPMSpec:
 
 
 class AbstractChecker:
-    pass
+    def __init__(self, stable):
+        self.stable = stable
 
 
 class CheckReleaseMonitoring(AbstractChecker):
@@ -84,7 +85,11 @@ class CheckReleaseMonitoring(AbstractChecker):
                     error = error + "\n" + res
             raise ValueError(error)
 
+        if self.stable:
+            return data['stable_versions'][0]
+
         return data['version']
+
 
     """
         Return alternatives found from Anitya
@@ -121,7 +126,8 @@ class Checker:
         CheckReleaseMonitoring,
     ]
 
-    def __init__(self, debug):
+    def __init__(self, stable, debug):
+        self.stable = stable
         self.debug = debug
 
     def find_latest(self, specfile):
@@ -129,7 +135,7 @@ class Checker:
         spec = RPMSpec(specfile)
 
         for name in self.checkers:
-            checker = name()
+            checker = name(self.stable)
             try:
                 v = checker.find_latest(self.distro, spec)
             except ValueError as e:
@@ -152,6 +158,10 @@ class Checker:
 def main():
     parser = argparse.ArgumentParser(description='PLD-Notify: project to monitor upstream releases')
 
+    parser.add_argument('--pre-release',
+                        action='store_true',
+                        help='Check for pre-release versions (default: %(default)s)')
+
     parser.add_argument('-d', '--debug',
                         action='store_true',
                         help='Enable debugging (default: %(default)s)')
@@ -165,7 +175,7 @@ def main():
     if not args.debug:
         rpm.setVerbosity(rpm.RPMLOG_ERR)
 
-    checker = Checker(args.debug)
+    checker = Checker(not args.pre_release, args.debug)
     i = 0
     n = len(args.packages)
     print("Checking %d packages" % n)
