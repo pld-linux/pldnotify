@@ -54,63 +54,25 @@ class RPMSpec:
         return self._version
 
 
-"""
-Class containing specific remote repositories,
-i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
-
-"""
+class AbstractChecker:
+    pass
 
 
-class Checker:
-    distro = 'pld-linux'
-    checkers = ['anitya']
-
-    def __init__(self, specfile, debug):
-        self.debug = debug
-        self.spec = RPMSpec(specfile)
-
-        name = path.splitext(path.basename(specfile))[0]
-        if self.spec.name != name:
-            print("WARNING: name mismatch: %s!=%s" % (self.spec.name, name))
-
-        print("%s: %s" % (self.spec.name, self.spec.version))
-
-    def find_recent(self):
-        current = None
-
-        for fn in self.checkers:
-            try:
-                v = getattr(self, fn)()
-            except ValueError as e:
-                print("WARNING: skipping %s: %s" % (fn, e))
-                continue
-
-            if self.debug:
-                print("DEBUG: %s: %s" % (fn, v))
-
-            if self.spec.compare(v) <= 0:
-                if self.debug:
-                    print("DEBUG: skipping %s (is not newer)" % (v))
-                continue
-
-            current = v
-
-        return current
-
+class CheckReleaseMonitoring(AbstractChecker):
     """
         Check for update from release-monitoring.org (Anitya).
         Raise ValueError or version from anitya project.
     """
 
-    def anitya(self):
-        url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, self.spec.name)
+    def find_latest(self, distro, spec):
+        url = "https://release-monitoring.org/api/project/%s/%s" % (distro, spec.name)
         response = requests.get(url)
         data = response.json()
         if 'error' in data:
             error = data['error']
-            if error == 'No package "%s" found in distro "%s"' % (self.spec.name, self.distro):
-                res = self.anitya_alternatives()
-                if res != None:
+            if error == 'No package "%s" found in distro "%s"' % (spec.name, distro):
+                res = self.find_alternatives(spec)
+                if res is not None:
                     error = error + "\n" + res
             raise ValueError(error)
 
@@ -120,8 +82,8 @@ class Checker:
         Return alternatives found from Anitya
     """
 
-    def anitya_alternatives(self):
-        url = "https://release-monitoring.org/api/projects/?pattern=%s" % self.spec.name
+    def find_alternatives(self, spec):
+        url = "https://release-monitoring.org/api/projects/?pattern=%s" % spec.name
         data = requests.get(url).json()
 
         if data['total'] == 0:
@@ -137,6 +99,52 @@ class Checker:
             r.append(format_project(project))
 
         return "Possible matches:\n- %s" % ("\n- ".join(r))
+
+
+"""
+Class containing specific remote repositories,
+i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
+"""
+
+
+class Checker:
+    distro = 'pld-linux'
+    checkers = [
+        CheckReleaseMonitoring,
+    ]
+
+    def __init__(self, specfile, debug):
+        self.debug = debug
+        self.spec = RPMSpec(specfile)
+
+        name = path.splitext(path.basename(specfile))[0]
+        if self.spec.name != name:
+            print("WARNING: name mismatch: %s!=%s" % (self.spec.name, name))
+
+        print("%s: %s" % (self.spec.name, self.spec.version))
+
+    def find_latest(self):
+        current = None
+
+        for name in self.checkers:
+            checker = name()
+            try:
+                v = checker.find_latest(self.distro, self.spec)
+            except ValueError as e:
+                print("WARNING: skipping %s: %s" % (name, e))
+                continue
+
+            if self.debug:
+                print("DEBUG: %s: %s" % (name, v))
+
+            if self.spec.compare(v) <= 0:
+                if self.debug:
+                    print("DEBUG: skipping %s (is not newer)" % (v))
+                continue
+
+            current = v
+
+        return current
 
 
 def main():
@@ -163,7 +171,7 @@ def main():
         print("[%d/%d] checking %s" % (i, n, package))
         try:
             checker = Checker(package, args.debug)
-            ver = checker.find_recent()
+            ver = checker.find_latest()
         except Exception as e:
             print("ERROR: %s" % e)
             continue
