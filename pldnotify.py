@@ -68,18 +68,20 @@ class AbstractChecker:
 
 
 class CheckReleaseMonitoring(AbstractChecker):
+    distro = 'pld-linux'
+
     """
         Check for update from release-monitoring.org (Anitya).
         Raise ValueError or version from anitya project.
     """
 
-    def find_latest(self, distro, spec):
-        url = "https://release-monitoring.org/api/project/%s/%s" % (distro, spec.name)
+    def find_latest(self, spec):
+        url = "https://release-monitoring.org/api/project/%s/%s" % (self.distro, spec.name)
         response = requests.get(url)
         data = response.json()
         if 'error' in data:
             error = data['error']
-            if error == 'No package "%s" found in distro "%s"' % (spec.name, distro):
+            if error == 'No package "%s" found in distro "%s"' % (spec.name, self.distro):
                 res = self.find_alternatives(spec)
                 if res is not None:
                     error = error + "\n" + res
@@ -121,7 +123,6 @@ i.e Anitya (release-monitoring.org), NPM (nodejs), etc ...
 
 
 class Checker:
-    distro = 'pld-linux'
     checkers = [
         CheckReleaseMonitoring,
     ]
@@ -137,7 +138,7 @@ class Checker:
         for name in self.checkers:
             checker = name(self.stable)
             try:
-                v = checker.find_latest(self.distro, spec)
+                v = checker.find_latest(spec)
             except ValueError as e:
                 print("WARNING: skipping %s: %s" % (name, e))
                 continue
