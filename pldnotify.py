@@ -16,6 +16,7 @@ class RPMSpec:
         self._header = None
         self._name = None
         self._version = None
+        self.check_sanity()
 
     def get_spec_header(self):
         if not self._header:
@@ -52,6 +53,13 @@ class RPMSpec:
             if not self._version:
                 raise ValueError("%s: spec with no version" % self._specfile)
         return self._version
+
+    def check_sanity(self):
+        name = path.splitext(path.basename(self._specfile))[0]
+        if self.name != name:
+            print("WARNING: name mismatch: %s!=%s" % (self.name, name))
+
+        print("%s: %s" % (self.name, self.version))
 
 
 class AbstractChecker:
@@ -116,12 +124,6 @@ class Checker:
     def __init__(self, specfile, debug):
         self.debug = debug
         self.spec = RPMSpec(specfile)
-
-        name = path.splitext(path.basename(specfile))[0]
-        if self.spec.name != name:
-            print("WARNING: name mismatch: %s!=%s" % (self.spec.name, name))
-
-        print("%s: %s" % (self.spec.name, self.spec.version))
 
     def find_latest(self):
         current = None
