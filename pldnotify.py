@@ -121,17 +121,17 @@ class Checker:
         CheckReleaseMonitoring,
     ]
 
-    def __init__(self, specfile, debug):
+    def __init__(self, debug):
         self.debug = debug
-        self.spec = RPMSpec(specfile)
 
-    def find_latest(self):
+    def find_latest(self, specfile):
         current = None
+        spec = RPMSpec(specfile)
 
         for name in self.checkers:
             checker = name()
             try:
-                v = checker.find_latest(self.distro, self.spec)
+                v = checker.find_latest(self.distro, spec)
             except ValueError as e:
                 print("WARNING: skipping %s: %s" % (name, e))
                 continue
@@ -139,9 +139,9 @@ class Checker:
             if self.debug:
                 print("DEBUG: %s: %s" % (name, v))
 
-            if self.spec.compare(v) <= 0:
+            if spec.compare(v) <= 0:
                 if self.debug:
-                    print("DEBUG: skipping %s (is not newer)" % (v))
+                    print("DEBUG: skipping %s (is not newer)" % v)
                 continue
 
             current = v
@@ -165,23 +165,23 @@ def main():
     if not args.debug:
         rpm.setVerbosity(rpm.RPMLOG_ERR)
 
+    checker = Checker(args.debug)
     i = 0
     n = len(args.packages)
     print("Checking %d packages" % n)
-    for package in args.packages:
+    for specfile in args.packages:
         i += 1
-        print("[%d/%d] checking %s" % (i, n, package))
+        print("[%d/%d] checking %s" % (i, n, specfile))
         try:
-            checker = Checker(package, args.debug)
-            ver = checker.find_latest()
+            ver = checker.find_latest(specfile)
         except Exception as e:
             print("ERROR: %s" % e)
             continue
 
         if ver:
-            print("[%s] Found an update: %s" % (package, ver))
+            print("[%s] Found an update: %s" % (specfile, ver))
         else:
-            print("[%s] No updates found" % (package))
+            print("[%s] No updates found" % specfile)
 
 
 if __name__ == '__main__':
