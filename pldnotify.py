@@ -66,6 +66,8 @@ class AbstractChecker:
     def __init__(self, stable):
         self.stable = stable
 
+    def __str__(self):
+        return "%r" % self.__class__.__name__
 
 class CheckReleaseMonitoring(AbstractChecker):
     distro = 'pld-linux'
@@ -140,7 +142,7 @@ class Checker:
             try:
                 v = checker.find_latest(spec)
             except ValueError as e:
-                print("WARNING: skipping %s: %s" % (name, e))
+                print("WARNING: skipping %s: %s" % (checker, e))
                 continue
 
             if self.debug:
